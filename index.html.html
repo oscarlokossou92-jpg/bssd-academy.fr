@@ -1277,6 +1277,12 @@ window.saveFormation = async function() {
   const status = document.getElementById('add-status');
   const btn = document.getElementById('save-btn');
 
+  // Helper : remet toujours le bouton en état normal
+  function resetBtn() {
+    btn.disabled = false;
+    btn.textContent = '💾 Enregistrer la formation';
+  }
+
   if (!titre || !prix || !desc || !cat || !file) {
     status.style.display = 'block';
     status.style.color = '#7a1f1f';
@@ -1290,56 +1296,73 @@ window.saveFormation = async function() {
   status.style.color = 'var(--muted)';
   status.textContent = '📤 Upload de la photo...';
 
-  // Upload photo to Storage
   const progressBar = document.getElementById('upload-progress');
   const bar = document.getElementById('upload-bar');
   progressBar.style.display = 'block';
 
-  const storageRef = ref(storage, `formations/${Date.now()}_${file.name}`);
-  const uploadTask = uploadBytesResumable(storageRef, file);
+  try {
+    const storageRef = ref(storage, `formations/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-  uploadTask.on('state_changed',
-    (snap) => {
-      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-      bar.style.width = pct + '%';
-    },
-    (error) => {
-      status.style.color = '#7a1f1f';
-      status.textContent = '❌ Erreur lors de l\'upload : ' + error.message;
-      btn.disabled = false;
-      btn.textContent = '💾 Enregistrer la formation';
-    },
-    async () => {
-      const photoURL = await getDownloadURL(uploadTask.snapshot.ref);
-      const storagePath = uploadTask.snapshot.ref.fullPath;
-
-      // Save to Firestore
-      status.textContent = '💾 Enregistrement dans la base...';
-      try {
-        await addDoc(collection(db, 'formations'), {
-          titre, prix, desc, cat, badge, url, photoURL, storagePath,
-          createdAt: serverTimestamp()
-        });
-        status.style.color = '#0f6e56';
-        status.textContent = '✅ Formation enregistrée avec succès !';
-        // Reset form
-        ['f-titre','f-prix','f-desc','f-url'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('f-cat').value = '';
-        document.getElementById('f-badge').value = '';
-        document.getElementById('f-photo').value = '';
-        document.getElementById('photo-preview').style.display = 'none';
+    uploadTask.on('state_changed',
+      (snap) => {
+        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        bar.style.width = pct + '%';
+      },
+      (error) => {
+        // Erreur CORS ou Storage → affichage + déblocage bouton garanti
+        status.style.color = '#7a1f1f';
+        if (error.code === 'storage/unauthorized') {
+          status.textContent = '❌ Accès refusé (Storage). Vérifiez les règles Firebase Storage.';
+        } else if (error.message && error.message.includes('CORS')) {
+          status.textContent = '❌ Erreur CORS : configurez cors.json dans Firebase Storage (voir README).';
+        } else {
+          status.textContent = '❌ Erreur upload : ' + error.message;
+        }
         progressBar.style.display = 'none';
         bar.style.width = '0%';
-        // Reload courses on the site
-        loadFormationsPublic();
-      } catch(e) {
-        status.style.color = '#7a1f1f';
-        status.textContent = '❌ Erreur Firestore : ' + e.message;
+        resetBtn();
+      },
+      async () => {
+        try {
+          const photoURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const storagePath = uploadTask.snapshot.ref.fullPath;
+
+          status.textContent = '💾 Enregistrement dans la base...';
+          await addDoc(collection(db, 'formations'), {
+            titre, prix, desc, cat, badge, url, photoURL, storagePath,
+            createdAt: serverTimestamp()
+          });
+
+          status.style.color = '#0f6e56';
+          status.textContent = '✅ Formation enregistrée avec succès !';
+
+          // Reset form
+          ['f-titre','f-prix','f-desc','f-url'].forEach(id => document.getElementById(id).value = '');
+          document.getElementById('f-cat').value = '';
+          document.getElementById('f-badge').value = '';
+          document.getElementById('f-photo').value = '';
+          document.getElementById('photo-preview').style.display = 'none';
+          progressBar.style.display = 'none';
+          bar.style.width = '0%';
+
+          loadFormationsPublic();
+        } catch(e) {
+          status.style.color = '#7a1f1f';
+          status.textContent = '❌ Erreur Firestore : ' + e.message;
+        } finally {
+          // Le bouton est TOUJOURS réinitialisé, succès ou échec
+          resetBtn();
+        }
       }
-      btn.disabled = false;
-      btn.textContent = '💾 Enregistrer la formation';
-    }
-  );
+    );
+  } catch(e) {
+    // Erreur inattendue avant même le démarrage de l'upload
+    status.style.color = '#7a1f1f';
+    status.textContent = '❌ Erreur inattendue : ' + e.message;
+    progressBar.style.display = 'none';
+    resetBtn();
+  }
 };
 
 // ── Load Formations (Admin list) ──────────────────────────────────────────────

@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — BSSD Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:     #F8F9FC;
+  --bg2:    #EEF1F8;
+  --bg3:    #E4E9F4;
+  --bg4:    #FFFFFF;
+  --gold:   #1A56A0;
+  --gold2:  #2568C2;
+  --teal:   #C4571A;
+  --amber:  #2E7D5B;
+  --txt:    #141C2E;
+  --muted:  rgba(20,28,46,.52);
+  --brd:    rgba(26,86,160,.2);
+  --brd2:   rgba(20,28,46,.1);
+  --brd3:   rgba(20,28,46,.05);
+  --serif:  "Cormorant Garamond", serif;
+  --sans:   "DM Sans", sans-serif;
+  --r:      12px;
+  --r2:     18px;
+  --r3:     24px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--sans);
+  font-weight: 300;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ── Admin Box ─────────────────────────────────────────────────── */
+.admin-box {
+  background: var(--bg4);
+  border: 1px solid var(--brd);
+  border-radius: var(--r3);
+  width: 100%;
+  max-width: 860px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(20,28,46,.12);
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  background: var(--gold);
+  color: #fff;
+}
+.admin-header h1 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+.user-badge {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
+}
+.user-badge.show { display: flex; }
+.user-dot { width:8px; height:8px; background:#4ade80; border-radius:50%; }
+.logout-btn {
+  font-size: 11px;
+  color: rgba(255,255,255,.65);
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  font-family: var(--sans);
+  margin-left: 4px;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.admin-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--brd2);
+}
+.atab {
+  padding: 14px 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .3s;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font-family: var(--sans);
+}
+.atab.on { color: var(--gold); border-bottom-color: var(--gold); }
+.atab:hover:not(.on) { color: var(--txt); }
+
+/* ── Body / Sections ─────────────────────────────────────────── */
+.admin-body { padding: 32px; }
+.admin-section { display: none; }
+.admin-section.on { display: block; }
+
+/* ── Login ─────────────────────────────────────────────────────── */
+.login-wrap {
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+.login-wrap h2 {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin-bottom: 6px;
+  color: var(--txt);
+}
+.login-wrap p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* ── Form inputs ─────────────────────────────────────────────── */
+.a-input, .a-select, .a-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  background: var(--bg2);
+  border: 1px solid var(--brd2);
+  border-radius: 9px;
+  color: var(--txt);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .3s;
+  margin-bottom: 12px;
+}
+.a-input:focus, .a-select:focus, .a-textarea:focus { border-color: var(--gold); }
+.a-textarea { height: 90px; resize: none; margin-bottom: 0; }
+.a-select option { background: var(--bg2); color: var(--txt); }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.a-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background .3s, opacity .3s;
+  margin-top: 4px;
+}
+.a-btn:hover:not(:disabled) { background: var(--gold2); }
+.a-btn:disabled { opacity: .65; cursor: not-allowed; }
+
+/* ── Error / Status ─────────────────────────────────────────── */
+.a-err {
+  background: rgba(162,39,39,.08);
+  border: 1px solid rgba(162,39,39,.25);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #7a1f1f;
+  margin-bottom: 12px;
+  display: none;
+  word-break: break-word;
+}
+.admin-status {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px 0;
+  word-break: break-word;
+}
+
+/* ── Form layout ─────────────────────────────────────────────── */
+.fg { margin-bottom: 14px; }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* ── Upload ─────────────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--brd);
+  border-radius: var(--r);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .3s;
+  position: relative;
+}
+.upload-zone:hover { border-color: var(--gold); }
+.upload-zone input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.upload-zone-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-zone-txt { font-size: 13px; color: var(--muted); }
+.upload-preview {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--r);
+  margin-top: 10px;
+  display: none;
+}
+.upload-progress {
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  margin-top: 10px;
+  display: none;
+}
+.upload-progress-bar {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width .3s;
+}
+
+/* ── Formation list ──────────────────────────────────────────── */
+.f-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.f-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg2);
+  border: 1px solid var(--brd2);
+  border-radius: var(--r);
+}
+.f-item-img {
+  width: 70px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--bg3);
+}
+.f-item-info { flex: 1; min-width: 0; }
+.f-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txt);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.f-item-meta { font-size: 12px; color: var(--muted); }
+.f-item-actions { flex-shrink: 0; }
+.btn-del {
+  padding: 7px 14px;
+  background: rgba(162,39,39,.08);
+  border: 1px solid rgba(162,39,39,.2);
+  color: #7a1f1f;
+  border-radius: 100px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .3s;
+}
+.btn-del:hover { background: rgba(162,39,39,.18); }
+
+/* ── Badge catégorie ─────────────────────────────────────────── */
+.badge-cat {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+.bc-perso   { background:rgba(26,86,160,.1);   color: var(--gold); }
+.bc-coaching { background:rgba(196,87,26,.1);  color: var(--teal); }
+.bc-spirit  { background:rgba(46,125,91,.1);   color: var(--amber); }
+
+/* ── Save btn error state ─────────────────────────────────────── */
+.a-btn.error-state {
+  background: #7a1f1f;
+  white-space: normal;
+  height: auto;
+  line-height: 1.4;
+  padding: 12px 16px;
+  font-size: 12px;
+  text-align: left;
+  border-radius: 12px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .admin-header { padding: 18px 20px; }
+  .admin-body { padding: 18px; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ── Debug console indicator ────────────────────────────────── */
+.debug-banner {
+  background: rgba(26,86,160,.07);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.debug-dot { width:8px; height:8px; background:#4ade80; border-radius:50%; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</head>
+<body>
+
+<div class="admin-box">
+
+  <!-- ── HEADER ───────────────────────────────────────────────── -->
+  <div class="admin-header">
+    <h1>🎓 Administration — BSSD Academy</h1>
+    <div class="user-badge" id="user-badge">
+      <div class="user-dot"></div>
+      <span id="user-email"></span>
+      <button class="logout-btn" onclick="adminLogout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- ── LOGIN (affiché si non connecté) ─────────────────────── -->
+  <div id="section-login" class="admin-body">
+    <div class="login-wrap">
+      <h2>Connexion Admin</h2>
+      <p>Accès réservé à l'administrateur de BSSD Academy.</p>
+
+      <div class="debug-banner">
+        <div class="debug-dot"></div>
+        Logs Firebase actifs — ouvre la Console du navigateur (F12 → Console) pour suivre chaque étape.
+      </div>
+
+      <div class="a-err" id="login-err"></div>
+      <input type="email"    class="a-input" id="login-email" placeholder="Email administrateur">
+      <input type="password" class="a-input" id="login-pwd"   placeholder="Mot de passe"
+             onkeydown="if(event.key==='Enter') adminLogin()">
+      <button class="a-btn" id="login-btn" onclick="adminLogin()">Se connecter</button>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD (affiché si connecté) ─────────────────────── -->
+  <div id="section-dashboard" style="display:none;">
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="atab on"  onclick="switchTab('add', this)">➕ Ajouter une formation</button>
+      <button class="atab"     onclick="switchTab('list', this)">📋 Gérer les formations</button>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- ── TAB : Ajouter ──────────────────────────────────────── -->
+      <div class="admin-section on" id="tab-add">
+
+        <div class="debug-banner">
+          <div class="debug-dot"></div>
+          Console active — chaque étape de l'envoi est loggée avec le préfixe <strong>[BSSD-Admin]</strong>.
+        </div>
+
+        <!-- Formulaire -->
+        <div class="form-grid-2">
+          <div class="fg">
+            <label class="form-label">Titre de la formation *</label>
+            <input type="text" class="a-input" id="f-titre" placeholder="ex: Confiance en soi & Leadership" style="margin-bottom:0">
+          </div>
+          <div class="fg">
+            <label class="form-label">Prix (ex: $29 USD) *</label>
+            <input type="text" class="a-input" id="f-prix" placeholder="ex: $29 USD" style="margin-bottom:0">
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="form-label">Description *</label>
+          <textarea class="a-textarea" id="f-desc" placeholder="Description courte de la formation..."></textarea>
+        </div>
+
+        <div class="form-grid-2" style="margin-top:14px">
+          <div class="fg">
+            <label class="form-label">Catégorie *</label>
+            <select class="a-select" id="f-cat" style="margin-bottom:0">
+              <option value="">Choisir...</option>
+              <option value="perso">Développement Personnel</option>
+              <option value="coaching">Coaching</option>
+              <option value="spirit">Développement Spirituel</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="form-label">Badge</label>
+            <select class="a-select" id="f-badge" style="margin-bottom:0">
+              <option value="">Aucun</option>
+              <option value="Bestseller">Bestseller</option>
+              <option value="Nouveau">Nouveau</option>
+              <option value="Populaire">Populaire</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-top:14px">
+          <label class="form-label">Lien Gumroad (URL d'achat)</label>
+          <input type="url" class="a-input" id="f-url" placeholder="https://gumroad.com/l/..." style="margin-bottom:0">
+        </div>
+
+        <div class="fg" style="margin-top:14px">
+          <label class="form-label">Photo de couverture *</label>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" accept="image/*" id="f-photo" onchange="previewPhoto(this)">
+            <div class="upload-zone-icon">📸</div>
+            <div class="upload-zone-txt">Cliquez ou glissez une image<br><small>JPG, PNG, WebP · Max 5 Mo</small></div>
+          </div>
+          <img id="photo-preview" class="upload-preview" alt="Aperçu">
+          <div class="upload-progress" id="upload-progress">
+            <div class="upload-progress-bar" id="upload-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Statut textuel (au-dessus du bouton) -->
+        <div class="admin-status" id="add-status" style="display:none;"></div>
+
+        <!-- Bouton — affiche l'erreur précise directement sur lui-même si besoin -->
+        <button class="a-btn" id="save-btn" onclick="saveFormation()">
+          💾 Enregistrer la formation
+        </button>
+      </div><!-- /tab-add -->
+
+      <!-- ── TAB : Liste ────────────────────────────────────────── -->
+      <div class="admin-section" id="tab-list">
+        <div class="admin-status" id="list-status">Chargement des formations...</div>
+        <div class="f-list" id="f-list-container"></div>
+      </div>
+
+    </div><!-- /admin-body -->
+  </div><!-- /section-dashboard -->
+
+</div><!-- /admin-box -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIREBASE v9+ — CDN ESM (type="module" obligatoire)
+     Tous les imports viennent de https://www.gstatic.com/firebasejs/
+═══════════════════════════════════════════════════════════════ -->
+<script type="module">
+// ── Imports Firebase v9 CDN ────────────────────────────────────────────────
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ── Configuration Firebase ─────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyAvC5TyZ3l8BvVvMDabSM8nYwUjg2XSZEQ",
+  authDomain:        "bssd-academy.firebaseapp.com",
+  projectId:         "bssd-academy",
+  storageBucket:     "bssd-academy.firebasestorage.app",
+  messagingSenderId: "766831680074",
+  appId:             "1:766831680074:web:f1329ff5ad32cc9ed6a4b3"
+};
+
+// ── Initialisation ─────────────────────────────────────────────────────────
+console.log("[BSSD-Admin] 🚀 Initialisation Firebase...");
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+console.log("[BSSD-Admin] ✅ Firebase initialisé —", { auth, db, storage });
+
+// ── Helpers UI ─────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function showSection(name) {
+  $("section-login").style.display     = (name === "login")     ? "" : "none";
+  $("section-dashboard").style.display = (name === "dashboard") ? "" : "none";
+}
+
+// Remet le bouton dans son état normal
+function resetSaveBtn(label = "💾 Enregistrer la formation") {
+  const btn = $("save-btn");
+  btn.disabled = false;
+  btn.textContent = label;
+  btn.classList.remove("error-state");
+}
+
+// Affiche l'erreur directement sur le bouton (+ dans le statut)
+function showSaveBtnError(msg) {
+  const btn    = $("save-btn");
+  const status = $("add-status");
+  btn.disabled = false;
+  btn.textContent = "❌ " + msg;
+  btn.classList.add("error-state");
+  status.style.display = "block";
+  status.style.color   = "#7a1f1f";
+  status.textContent   = msg;
+}
+
+// ── Auth state ─────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (user) {
+    console.log("[BSSD-Admin] 🔐 Utilisateur connecté :", user.email);
+    $("user-badge").classList.add("show");
+    $("user-email").textContent = user.email;
+    showSection("dashboard");
+  } else {
+    console.log("[BSSD-Admin] 🔓 Aucun utilisateur connecté — affichage login");
+    $("user-badge").classList.remove("show");
+    showSection("login");
+  }
+});
+
+// ── Login ──────────────────────────────────────────────────────────────────
+window.adminLogin = async function () {
+  const email = $("login-email").value.trim();
+  const pwd   = $("login-pwd").value;
+  const err   = $("login-err");
+  const btn   = $("login-btn");
+
+  console.log("[BSSD-Admin] 🔑 Tentative de connexion avec :", email);
+
+  err.style.display = "none";
+  btn.textContent   = "Connexion en cours...";
+  btn.disabled      = true;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+    console.log("[BSSD-Admin] ✅ Connexion réussie");
+    // onAuthStateChanged gère l'affichage
+  } catch (e) {
+    console.error("[BSSD-Admin] ❌ Erreur de connexion :", e.code, e.message);
+    err.style.display = "block";
+    err.textContent   = traduireErreurAuth(e.code) + " (" + e.code + ")";
+    btn.textContent   = "Se connecter";
+    btn.disabled      = false;
+  }
+};
+
+function traduireErreurAuth(code) {
+  const map = {
+    "auth/wrong-password":        "Mot de passe incorrect.",
+    "auth/user-not-found":        "Aucun compte avec cet email.",
+    "auth/invalid-email":         "Email invalide.",
+    "auth/too-many-requests":     "Trop de tentatives. Réessayez plus tard.",
+    "auth/network-request-failed":"Pas de connexion réseau.",
+    "auth/invalid-credential":    "Email ou mot de passe incorrect.",
+  };
+  return map[code] || "Erreur d'authentification.";
+}
+
+// ── Logout ─────────────────────────────────────────────────────────────────
+window.adminLogout = async function () {
+  console.log("[BSSD-Admin] 👋 Déconnexion...");
+  await signOut(auth);
+  console.log("[BSSD-Admin] ✅ Déconnecté");
+};
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+window.switchTab = function (tab, btn) {
+  console.log("[BSSD-Admin] 📑 Changement d'onglet :", tab);
+  document.querySelectorAll(".atab").forEach(t => t.classList.remove("on"));
+  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("on"));
+  btn.classList.add("on");
+  document.getElementById("tab-" + tab).classList.add("on");
+  if (tab === "list") loadAdminList();
+};
+
+// ── Aperçu photo ───────────────────────────────────────────────────────────
+window.previewPhoto = function (input) {
+  const file = input.files[0];
+  if (!file) return;
+  console.log("[BSSD-Admin] 🖼 Photo sélectionnée :", file.name, "(" + (file.size / 1024).toFixed(1) + " Ko)");
+  const preview = $("photo-preview");
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+};
+
+// ── Sauvegarder une formation ──────────────────────────────────────────────
+window.saveFormation = async function () {
+  // 1️⃣ Lecture des champs
+  const titre = $("f-titre").value.trim();
+  const prix  = $("f-prix").value.trim();
+  const desc  = $("f-desc").value.trim();
+  const cat   = $("f-cat").value;
+  const badge = $("f-badge").value;
+  const url   = $("f-url").value.trim();
+  const file  = $("f-photo").files[0];
+
+  const status      = $("add-status");
+  const btn         = $("save-btn");
+  const progressBox = $("upload-progress");
+  const bar         = $("upload-bar");
+
+  console.log("[BSSD-Admin] 📋 Données du formulaire :", { titre, prix, desc, cat, badge, url, file });
+
+  // 2️⃣ Validation
+  if (!titre || !prix || !desc || !cat || !file) {
+    const msg = "⚠️ Veuillez remplir tous les champs obligatoires (*) et choisir une photo.";
+    console.warn("[BSSD-Admin] ⚠️ Validation échouée — champs manquants");
+    status.style.display = "block";
+    status.style.color   = "#7a1f1f";
+    status.textContent   = msg;
+    return;
+  }
+
+  // 3️⃣ Démarrage
+  console.log("[BSSD-Admin] 🚀 Début de l'envoi...");
+  btn.disabled    = true;
+  btn.textContent = "Envoi en cours...";
+  btn.classList.remove("error-state");
+  status.style.display = "block";
+  status.style.color   = "var(--muted)";
+  status.textContent   = "📤 Upload de la photo vers Firebase Storage...";
+  progressBox.style.display = "block";
+  bar.style.width = "0%";
+
+  try {
+    // 4️⃣ Référence Storage
+    const storagePath = `formations/${Date.now()}_${file.name}`;
+    const storageRef  = ref(storage, storagePath);
+    console.log("[BSSD-Admin] 📁 Chemin Storage :", storagePath);
+
+    // 5️⃣ Upload avec suivi de progression
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    console.log("[BSSD-Admin] ⏳ Upload démarré...");
+
+    await new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+
+        // Progression
+        snapshot => {
+          const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          bar.style.width    = pct + "%";
+          status.textContent = `📤 Upload photo... ${pct}%`;
+          console.log(`[BSSD-Admin] 📊 Progression upload : ${pct}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} octets)`);
+        },
+
+        // Erreur Storage / CORS
+        error => {
+          console.error("[BSSD-Admin] ❌ Erreur Storage :", error.code, error.message, error);
+
+          let msg = "";
+          switch (error.code) {
+            case "storage/unauthorized":
+              msg = "Accès refusé (storage/unauthorized). Vérifiez les règles Firebase Storage (allow write: if request.auth != null).";
+              break;
+            case "storage/canceled":
+              msg = "Upload annulé.";
+              break;
+            case "storage/unknown":
+              // Souvent CORS — le message brut le confirme
+              if (error.message && error.message.includes("CORS")) {
+                msg = "Erreur CORS. Configurez cors.json sur votre bucket Firebase Storage via gsutil.";
+              } else {
+                msg = "Erreur inconnue Storage : " + error.message;
+              }
+              break;
+            default:
+              msg = "Erreur Storage (" + error.code + ") : " + error.message;
+          }
+
+          progressBox.style.display = "none";
+          reject(new Error(msg));
+        },
+
+        // Succès upload
+        async () => {
+          console.log("[BSSD-Admin] ✅ Upload terminé —", uploadTask.snapshot.ref.fullPath);
+
+          // 6️⃣ Récupération de l'URL publique
+          console.log("[BSSD-Admin] 🔗 Récupération de l'URL de téléchargement...");
+          status.textContent = "🔗 Récupération de l'URL publique...";
+          const photoURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log("[BSSD-Admin] ✅ URL obtenue :", photoURL);
+
+          // 7️⃣ Sauvegarde Firestore
+          console.log("[BSSD-Admin] 💾 Sauvegarde dans Firestore...");
+          status.textContent = "💾 Enregistrement dans Firestore...";
+
+          const docData = {
+            titre, prix, desc, cat, badge, url,
+            photoURL,
+            storagePath: uploadTask.snapshot.ref.fullPath,
+            createdAt: serverTimestamp()
+          };
+          console.log("[BSSD-Admin] 📄 Données Firestore à enregistrer :", docData);
+
+          const docRef = await addDoc(collection(db, "formations"), docData);
+          console.log("[BSSD-Admin] ✅ Document Firestore créé, ID :", docRef.id);
+
+          // 8️⃣ Succès complet
+          status.style.color   = "#0f6e56";
+          status.textContent   = "✅ Formation enregistrée avec succès ! (ID : " + docRef.id + ")";
+          progressBox.style.display = "none";
+          bar.style.width = "0%";
+
+          // Reset du formulaire
+          ["f-titre","f-prix","f-url"].forEach(id => $(id).value = "");
+          $("f-desc").value  = "";
+          $("f-cat").value   = "";
+          $("f-badge").value = "";
+          $("f-photo").value = "";
+          $("photo-preview").style.display = "none";
+
+          resetSaveBtn("✅ Formation enregistrée — Ajouter une autre");
+          resolve();
+        }
+      );
+    });
+
+  } catch (e) {
+    // Toute erreur non gérée (réseau, Firestore, etc.)
+    console.error("[BSSD-Admin] ❌ Erreur globale saveFormation :", e);
+    progressBox.style.display = "none";
+    showSaveBtnError(e.message || "Erreur inconnue.");
+  }
+};
+
+// ── Charger la liste admin ─────────────────────────────────────────────────
+async function loadAdminList() {
+  const container = $("f-list-container");
+  const statusEl  = $("list-status");
+  container.innerHTML = "";
+  statusEl.style.display = "block";
+  statusEl.textContent   = "Chargement...";
+
+  console.log("[BSSD-Admin] 📋 Chargement de la liste des formations...");
+
+  try {
+    const q    = query(collection(db, "formations"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+
+    console.log("[BSSD-Admin] ✅ Formations trouvées :", snap.size);
+
+    if (snap.empty) {
+      statusEl.textContent = "Aucune formation enregistrée.";
+      return;
+    }
+
+    statusEl.style.display = "none";
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      console.log("[BSSD-Admin] 📄 Formation :", docSnap.id, d);
+
+      const catLabel = { perso: "Développement personnel", coaching: "Coaching", spirit: "Spirituel" }[d.cat] || d.cat;
+      const catClass = { perso: "bc-perso", coaching: "bc-coaching", spirit: "bc-spirit" }[d.cat] || "";
+
+      const item = document.createElement("div");
+      item.className = "f-item";
+      item.innerHTML = `
+        <img class="f-item-img" src="${d.photoURL || ''}" alt="${d.titre}">
+        <div class="f-item-info">
+          <div class="f-item-title">${d.titre} <span class="badge-cat ${catClass}">${catLabel}</span></div>
+          <div class="f-item-meta">${d.prix}${d.badge ? " · " + d.badge : ""}</div>
+        </div>
+        <div class="f-item-actions">
+          <button class="btn-del" onclick="deleteFormation('${docSnap.id}','${d.storagePath || ''}',this)">🗑 Supprimer</button>
+        </div>`;
+      container.appendChild(item);
+    });
+
+  } catch (e) {
+    console.error("[BSSD-Admin] ❌ Erreur chargement liste :", e.code, e.message, e);
+    statusEl.textContent = "❌ Erreur : " + e.message;
+  }
+}
+
+// ── Supprimer une formation ────────────────────────────────────────────────
+window.deleteFormation = async function (docId, storagePath, btn) {
+  if (!confirm("Supprimer cette formation ? Cette action est irréversible.")) return;
+
+  console.log("[BSSD-Admin] 🗑 Suppression formation :", docId, "| Storage :", storagePath);
+  btn.disabled    = true;
+  btn.textContent = "...";
+
+  try {
+    // Suppression Firestore
+    await deleteDoc(doc(db, "formations", docId));
+    console.log("[BSSD-Admin] ✅ Document Firestore supprimé :", docId);
+
+    // Suppression Storage (si chemin disponible)
+    if (storagePath) {
+      try {
+        await deleteObject(ref(storage, storagePath));
+        console.log("[BSSD-Admin] ✅ Fichier Storage supprimé :", storagePath);
+      } catch (storageErr) {
+        console.warn("[BSSD-Admin] ⚠️ Impossible de supprimer le fichier Storage (déjà absent ?) :", storageErr.message);
+      }
+    }
+
+    btn.closest(".f-item").remove();
+    console.log("[BSSD-Admin] ✅ Formation supprimée de l'interface");
+
+  } catch (e) {
+    console.error("[BSSD-Admin] ❌ Erreur suppression :", e.code, e.message, e);
+    alert("❌ Erreur : " + e.message + " (" + e.code + ")");
+    btn.disabled    = false;
+    btn.textContent = "🗑 Supprimer";
+  }
+};
+
+console.log("[BSSD-Admin] 🎉 Script chargé — en attente de l'état d'authentification...");
+</script>
+
+</body>
+</html>
